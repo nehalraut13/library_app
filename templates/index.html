@@ -126,13 +126,13 @@
 
     <form action="{{ url_for('update', id=student[0]) if student else url_for('add') }}" method="post">
         <label>Name:</label>
-        <input type="text" name="name" value="{{ student[1] if student else '' }}" required>
+        <input type="text" name="name" value="{{ student[1] if student else '' }}" required pattern="[A-Za-z ]+" title="Only letters and spaces allowed">
 
         <label>Fee Paid:</label>
-        <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}">
+        <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}" pattern="\d*" title="Only numbers allowed">
 
         <label>Mobile No:</label>
-        <input type="text" name="mobile_no" value="{{ student[3] if student else '' }}" required>
+        <input type="text" name="mobile_no" value="{{ student[3] if student else '' }}" required pattern="\d{10}" maxlength="10" minlength="10" title="Enter a valid 10-digit mobile number">
 
         <label>Plan Type:</label>
         <select name="plan_type" required>

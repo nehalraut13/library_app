@@ -3,6 +3,8 @@ import sqlite3
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+import re
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -39,8 +41,26 @@ def add():
     start_date = form.get('start_date')
     end_date = form.get('end_date')
 
-    if not all([name, mobile_no]):
+    # Validations
+    if not all([name, mobile_no, plan_type, start_date, end_date]):
         return "Missing required fields", 400
+
+    if not re.fullmatch(r'[A-Za-z ]+', name):
+        return "Name must contain only letters and spaces", 400
+
+    if not re.fullmatch(r'\d{10}', mobile_no):
+        return "Mobile number must be 10 digits", 400
+
+    if fee_paid and not fee_paid.isdigit():
+        return "Fee paid must be numeric", 400
+
+    try:
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+        if start_dt > end_dt:
+            return "Start date must be before or equal to end date", 400
+    except ValueError:
+        return "Invalid date format", 400
 
     conn = sqlite3.connect('students.db')
     conn.execute('''
@@ -66,15 +86,39 @@ def update(id):
     conn = sqlite3.connect('students.db')
     if request.method == 'POST':
         form = request.form
-        values = (
-            form.get('name'), form.get('fee_paid'), form.get('mobile_no'),
-            form.get('plan_type'), form.get('start_date'), form.get('end_date'), id
-        )
+        name = form.get('name')
+        fee_paid = form.get('fee_paid')
+        mobile_no = form.get('mobile_no')
+        plan_type = form.get('plan_type')
+        start_date = form.get('start_date')
+        end_date = form.get('end_date')
+
+        # Validations
+        if not all([name, mobile_no, plan_type, start_date, end_date]):
+            return "Missing required fields", 400
+
+        if not re.fullmatch(r'[A-Za-z ]+', name):
+            return "Name must contain only letters and spaces", 400
+
+        if not re.fullmatch(r'\d{10}', mobile_no):
+            return "Mobile number must be 10 digits", 400
+
+        if fee_paid and not fee_paid.isdigit():
+            return "Fee paid must be numeric", 400
+
+        try:
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            if start_dt > end_dt:
+                return "Start date must be before or equal to end date", 400
+        except ValueError:
+            return "Invalid date format", 400
+
         conn.execute('''
             UPDATE students
             SET name=?, fee_paid=?, mobile_no=?, plan_type=?, start_date=?, end_date=?
             WHERE id=?
-        ''', values)
+        ''', (name, fee_paid, mobile_no, plan_type, start_date, end_date, id))
         conn.commit()
         conn.close()
         return redirect('/')
@@ -84,7 +128,6 @@ def update(id):
         conn.close()
         return render_template('index.html', student=student, records=records)
 
-# ---------------------
 # Export to Excel
 @app.route('/export/excel')
 def export_excel():
