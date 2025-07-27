@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Library Entry System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            max-width: 500px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        form input[type="text"],
+        form input[type="date"],
+        form select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #af4c7d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 16px;
+        }
+
+        form button:hover {
+            background-color: #a0456b;
+        }
+
+        form a {
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        td a {
+            color: #007BFF;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        td a:hover {
+            text-decoration: underline;
+        }
+
+        .export-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .export-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .excel-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .pdf-btn {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            form, table {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ 'Update Student' if student else 'Add Student' }}</h1>
+
+    <form action="{{ url_for('update', id=student[0]) if student else url_for('add') }}" method="post">
+        <label>Name:</label>
+        <input type="text" name="name" value="{{ student[1] if student else '' }}" required>
+
+        <label>Fee Paid:</label>
+        <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}">
+
+        <label>Mobile No:</label>
+        <input type="text" name="mobile_no" value="{{ student[3] if student else '' }}" required>
+
+        <label>Plan Type:</label>
+        <select name="plan_type" required>
+            <option value="800" {% if student and student[4] == '800' %}selected{% endif %}>₹800/month</option>
+            <option value="1000" {% if student and student[4] == '1000' %}selected{% endif %}>₹1000/month</option>
+        </select>
+
+        <label>Start Date:</label>
+        <input type="date" name="start_date" value="{{ student[5] if student else '' }}" required>
+
+        <label>End Date:</label>
+        <input type="date" name="end_date" value="{{ student[6] if student else '' }}" required>
+
+        <button type="submit">
+            <i class="fas fa-user-plus"></i> {{ 'Update Student' if student else 'Add Student' }}
+        </button>
+        {% if student %}
+            <a href="{{ url_for('index') }}">Cancel</a>
+        {% endif %}
+    </form>
+
+    <h2>Student Records</h2>
+
+    <div class="export-buttons">
+        <a href="/export/excel"><button class="excel-btn">Export to Excel</button></a>
+        <a href="/export/pdf"><button class="pdf-btn">Export to PDF</button></a>
+    </div>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Fee Paid</th>
+            <th>Mobile No</th>
+            <th>Plan</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Actions</th>
+        </tr>
+        {% for row in records %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+            <td>{{ row[6] }}</td>
+            <td>
+                <a href="{{ url_for('update', id=row[0]) }}"><i class="fas fa-edit"></i></a> |
+                <a href="{{ url_for('delete', id=row[0]) }}"><i class="fas fa-trash-alt"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
