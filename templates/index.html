@@ -12,6 +12,19 @@
             padding: 20px;
         }
 
+        .top-bar {
+            background-color: #627180;
+            color: white;
+            padding: 10px 20px;
+            text-align: right;
+        }
+
+        .top-bar a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 10px;
+        }
+
         h1, h2 {
             text-align: center;
             color: #333;
@@ -122,6 +135,11 @@
     </style>
 </head>
 <body>
+    <div class="top-bar">
+        <strong>Welcome, Admin</strong>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
     <h1>{{ 'Update Student' if student else 'Add Student' }}</h1>
 
     <form action="{{ url_for('update', id=student[0]) if student else url_for('add') }}" method="post">

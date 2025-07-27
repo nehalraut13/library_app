@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file, session
 import sqlite3
 import pandas as pd
 from reportlab.lib.pagesizes import letter
@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Needed for session management
 
 # Initialize database
 def init_db():
@@ -24,8 +25,33 @@ def init_db():
     ''')
     conn.close()
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if session.get('admin'):
+        return redirect('/dashboard')
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if username == 'admin' and password == 'admin123':
+            session['admin'] = True
+            return redirect('/dashboard')
+        else:
+            return render_template('dashboard.html', error="Invalid username or password")
+
+    return render_template('dashboard.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('admin', None)
+    return redirect('/')
+
+@app.route('/dashboard')
 def index():
+    if not session.get('admin'):
+        return redirect('/')
+
     conn = sqlite3.connect('students.db')
     records = conn.execute('SELECT * FROM students').fetchall()
     conn.close()
@@ -33,6 +59,9 @@ def index():
 
 @app.route('/add', methods=['POST'])
 def add():
+    if not session.get('admin'):
+        return redirect('/')
+
     form = request.form
     name = form.get('name')
     fee_paid = form.get('fee_paid')
@@ -41,7 +70,6 @@ def add():
     start_date = form.get('start_date')
     end_date = form.get('end_date')
 
-    # Validations
     if not all([name, mobile_no, plan_type, start_date, end_date]):
         return "Missing required fields", 400
 
@@ -71,18 +99,24 @@ def add():
     conn.commit()
     conn.close()
 
-    return redirect('/')
+    return redirect('/dashboard')
 
 @app.route('/delete/<int:id>')
 def delete(id):
+    if not session.get('admin'):
+        return redirect('/')
+
     conn = sqlite3.connect('students.db')
     conn.execute('DELETE FROM students WHERE id = ?', (id,))
     conn.commit()
     conn.close()
-    return redirect('/')
+    return redirect('/dashboard')
 
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
 def update(id):
+    if not session.get('admin'):
+        return redirect('/')
+
     conn = sqlite3.connect('students.db')
     if request.method == 'POST':
         form = request.form
@@ -93,7 +127,6 @@ def update(id):
         start_date = form.get('start_date')
         end_date = form.get('end_date')
 
-        # Validations
         if not all([name, mobile_no, plan_type, start_date, end_date]):
             return "Missing required fields", 400
 
@@ -121,16 +154,18 @@ def update(id):
         ''', (name, fee_paid, mobile_no, plan_type, start_date, end_date, id))
         conn.commit()
         conn.close()
-        return redirect('/')
+        return redirect('/dashboard')
     else:
         student = conn.execute('SELECT * FROM students WHERE id=?', (id,)).fetchone()
         records = conn.execute('SELECT * FROM students').fetchall()
         conn.close()
         return render_template('index.html', student=student, records=records)
 
-# Export to Excel
 @app.route('/export/excel')
 def export_excel():
+    if not session.get('admin'):
+        return redirect('/')
+
     conn = sqlite3.connect('students.db')
     df = pd.read_sql_query("SELECT * FROM students", conn)
     conn.close()
@@ -138,9 +173,11 @@ def export_excel():
     df.to_excel(file_path, index=False)
     return send_file(file_path, as_attachment=True)
 
-# Export to PDF
 @app.route('/export/pdf')
 def export_pdf():
+    if not session.get('admin'):
+        return redirect('/')
+
     conn = sqlite3.connect('students.db')
     records = conn.execute('SELECT * FROM students').fetchall()
     conn.close()
