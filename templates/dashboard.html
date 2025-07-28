@@ -6,51 +6,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             background: linear-gradient(to right, #e3f2fd, #ffffff);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
+
         .header {
             background-color: #627180;
             color: white;
             text-align: center;
             padding: 20px 10px;
         }
-        .header h2 { margin: 0; font-size: 28px; }
-        .header h5 { margin: 5px 0 0; font-weight: normal; font-size: 16px; }
+
+        .header h2 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .header h5 {
+            margin: 5px 0 0;
+            font-weight: normal;
+            font-size: 16px;
+        }
+
         .login-container {
             max-width: 400px;
-            margin: 40px auto;
-            padding: 30px;
+            margin: 50px auto;
+            padding: 30px 25px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
+
         .login-container h2 {
             text-align: center;
             margin-bottom: 25px;
             color: #34495e;
             font-size: 24px;
         }
+
         .input-group {
             position: relative;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+
         .input-group i {
             position: absolute;
             top: 12px;
             left: 12px;
             color: #888;
         }
+
         .input-group input {
             width: 100%;
-            padding: 12px 12px 12px 36px;
+            padding: 12px 12px 12px 40px;
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 16px;
         }
+
         input[type="submit"] {
             width: 100%;
             padding: 12px;
@@ -63,14 +83,27 @@
             cursor: pointer;
             transition: background 0.3s ease;
         }
+
         input[type="submit"]:hover {
-            background: #f158b7;
+            background: #a30710;
         }
+
         .error {
             color: red;
             text-align: center;
             font-size: 14px;
             margin-bottom: 10px;
+        }
+
+        @media (max-width: 450px) {
+            .login-container {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .header h2 {
+                font-size: 22px;
+            }
         }
     </style>
 </head>
@@ -79,6 +112,7 @@
         <h2><i class="fas fa-book-open"></i> Shree Mauli Abhyasika</h2>
         <h5><i class="fas fa-map-marker-alt"></i> Gadge Nagar, Amravati</h5>
     </div>
+
     <div class="login-container">
         <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
         {% if error %}
