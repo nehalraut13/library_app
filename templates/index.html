@@ -160,11 +160,14 @@
         <label>Name:</label>
         <input type="text" name="name" value="{{ student[1] if student else '' }}" required pattern="[A-Za-z ]+">
 
-        <label>Fee Paid:</label>
-        <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}" pattern="\d*">
+        <label>Seat No:</label>
+        <input type="text" name="seat_no" value="{{ student[7] if student else '' }}" required>
 
         <label>Mobile No:</label>
         <input type="text" name="mobile_no" value="{{ student[3] if student else '' }}" required pattern="\d{10}" maxlength="10">
+
+        <label>Fee Paid:</label>
+        <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}" pattern="\d*">
 
         <label>Plan Type:</label>
         <select name="plan_type" required>
@@ -177,9 +180,6 @@
 
         <label>End Date:</label>
         <input type="date" name="end_date" value="{{ student[6] if student else '' }}" required>
-
-        <label>Seat No:</label>
-        <input type="text" name="seat_no" value="{{ student[7] if student else '' }}" required>
 
         <label>Aadhaar Photo:</label>
         <input type="file" name="aadhaar_photo" {% if not student %}required{% endif %} accept="image/*">
@@ -212,12 +212,12 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Fee Paid</th>
+                <th>Seat No</th>
                 <th>Mobile No</th>
+                <th>Fee Paid</th>
                 <th>Plan</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Seat No</th>
                 <th>Aadhaar</th>
                 <th>Actions</th>
             </tr>
@@ -225,12 +225,12 @@
             <tr>
                 <td>{{ row[0] }}</td>
                 <td>{{ row[1] }}</td>
-                <td>{{ row[2] }}</td>
+                <td>{{ row[7] }}</td>
                 <td>{{ row[3] }}</td>
+                <td>{{ row[2] }}</td>
                 <td>{{ row[4] }}</td>
                 <td>{{ row[5] }}</td>
                 <td>{{ row[6] }}</td>
-                <td>{{ row[7] }}</td>
                 <td>
                     {% if row[8] %}
                         <a href="{{ url_for('static', filename='uploads/' ~ row[8]) }}" target="_blank">View</a>

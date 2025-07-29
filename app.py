@@ -69,12 +69,12 @@ def add():
 
     form = request.form
     name = form.get('name')
-    fee_paid = form.get('fee_paid')
+    seat_no = form.get('seat_no')
     mobile_no = form.get('mobile_no')
+    fee_paid = form.get('fee_paid')
     plan_type = form.get('plan_type')
     start_date = form.get('start_date')
     end_date = form.get('end_date')
-    seat_no = form.get('seat_no')
 
     aadhaar_file = request.files.get('aadhaar_photo')
     aadhaar_filename = ''
@@ -101,9 +101,9 @@ def add():
     conn = sqlite3.connect('students.db')
     conn.execute('''
         INSERT INTO students 
-        (name, fee_paid, mobile_no, plan_type, start_date, end_date, seat_no, aadhaar_photo)
+        (name, seat_no, mobile_no, fee_paid, plan_type, start_date, end_date, aadhaar_photo)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (name, fee_paid, mobile_no, plan_type, start_date, end_date, seat_no, aadhaar_filename))
+    ''', (name, seat_no, mobile_no, fee_paid, plan_type, start_date, end_date, aadhaar_filename))
     conn.commit()
     conn.close()
 
@@ -129,12 +129,12 @@ def update(id):
     if request.method == 'POST':
         form = request.form
         name = form.get('name')
-        fee_paid = form.get('fee_paid')
+        seat_no = form.get('seat_no')
         mobile_no = form.get('mobile_no')
+        fee_paid = form.get('fee_paid')
         plan_type = form.get('plan_type')
         start_date = form.get('start_date')
         end_date = form.get('end_date')
-        seat_no = form.get('seat_no')
 
         student = conn.execute('SELECT * FROM students WHERE id=?', (id,)).fetchone()
         aadhaar_file = request.files.get('aadhaar_photo')
@@ -161,9 +161,9 @@ def update(id):
 
         conn.execute('''
             UPDATE students
-            SET name=?, fee_paid=?, mobile_no=?, plan_type=?, start_date=?, end_date=?, seat_no=?, aadhaar_photo=?
+            SET name=?, seat_no=?, mobile_no=?, fee_paid=?, plan_type=?, start_date=?, end_date=?, aadhaar_photo=?
             WHERE id=?
-        ''', (name, fee_paid, mobile_no, plan_type, start_date, end_date, seat_no, aadhaar_filename, id))
+        ''', (name, seat_no, mobile_no, fee_paid, plan_type, start_date, end_date, aadhaar_filename, id))
         conn.commit()
         conn.close()
         flash("Student updated successfully!")
@@ -199,14 +199,13 @@ def export_pdf():
     c.drawString(200, height - 40, "Student Records")
     c.setFont("Helvetica", 10)
     y = height - 80
-    headers = ["ID", "Name", "Fee Paid", "Mobile No", "Plan", "Start", "End", "Seat", "Aadhaar"]
+    headers = ["ID", "Name", "Seat No", "Mobile No", "Fee Paid", "Plan", "Start", "End", "Aadhaar"]
     for i, header in enumerate(headers):
         c.drawString(50 + i * 55, y, header)
     y -= 20
     for row in records:
-        for i, value in enumerate(row):
-            if i >= len(headers):
-                break
+        reordered = [row[0], row[1], row[7], row[3], row[2], row[4], row[5], row[6], row[8]]
+        for i, value in enumerate(reordered):
             c.drawString(50 + i * 55, y, str(value))
         y -= 15
         if y < 40:
