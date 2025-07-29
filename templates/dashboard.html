@@ -5,50 +5,90 @@
     <title>Shree Mauli Abhyasika - Admin Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         * {
             box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(to right, #e3f2fd, #ffffff);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
 
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, #e3f2fd, #ffffff, #e1f5fe);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            animation: fadeIn 1.2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .header {
-            background-color: #627180;
+            background-color: #2c3e50;
             color: white;
             text-align: center;
             padding: 20px 10px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            animation: slideDown 1s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .header h2 {
-            margin: 0;
-            font-size: 28px;
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+
+        .header h2 span {
+            display: inline-block;
+            background: linear-gradient(to right, #ffffff, #ffd700, #ffffff);
+            background-size: 300% auto;
+            color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 300% center;
+            }
         }
 
         .header h5 {
-            margin: 5px 0 0;
             font-weight: normal;
             font-size: 16px;
         }
 
         .login-container {
-            max-width: 400px;
-            margin: 50px auto;
+            max-width: 420px;
+            margin: 60px auto;
             padding: 30px 25px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            animation: fadeInUp 1.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .login-container h2 {
             text-align: center;
-            margin-bottom: 25px;
             color: #34495e;
-            font-size: 24px;
+            font-size: 26px;
+            margin-bottom: 25px;
         }
 
         .input-group {
@@ -58,9 +98,10 @@
 
         .input-group i {
             position: absolute;
-            top: 12px;
+            top: 14px;
             left: 12px;
             color: #888;
+            transition: color 0.3s ease;
         }
 
         .input-group input {
@@ -69,23 +110,45 @@
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        input[type="submit"] {
+        .input-group input:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .input-group input:focus + i {
+            color: #2196f3;
+        }
+
+        .login-btn {
             width: 100%;
             padding: 12px;
-            background: #c40912;
+            background: linear-gradient(to right, #c40912, #ff4e50);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.4s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(196, 9, 18, 0.3);
+            animation: bounceIn 1s ease;
         }
 
-        input[type="submit"]:hover {
-            background: #a30710;
+        .login-btn:hover {
+            background: linear-gradient(to right, #a30710, #ff1f3d);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .login-btn i {
+            font-size: 18px;
         }
 
         .error {
@@ -93,23 +156,36 @@
             text-align: center;
             font-size: 14px;
             margin-bottom: 10px;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         @media (max-width: 450px) {
             .login-container {
-                margin: 20px;
-                padding: 20px;
+                margin: 30px 15px;
+                padding: 25px;
             }
 
             .header h2 {
-                font-size: 22px;
+                font-size: 24px;
             }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h2><i class="fas fa-book-open"></i> Shree Mauli Abhyasika</h2>
+        <h2><i class="fas fa-book-open"></i> <span>Shree Mauli Abhyasika</span></h2>
         <h5><i class="fas fa-map-marker-alt"></i> Gadge Nagar, Amravati</h5>
     </div>
 
@@ -127,7 +203,9 @@
                 <i class="fas fa-lock"></i>
                 <input type="password" name="password" placeholder="Password" required>
             </div>
-            <input type="submit" value="Login">
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
         </form>
     </div>
 </body>
