@@ -30,6 +30,46 @@
             color: #333;
         }
 
+        .section-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .section-toggle .action-card {
+            background: linear-gradient(to bottom right, #6a82fb, #fc5c7d);
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            width: 150px;
+            height: 150px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .section-toggle .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-toggle .action-card i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .section-toggle .action-card span {
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
         form {
             max-width: 500px;
             margin: 20px auto;
@@ -120,13 +160,28 @@
             color: white;
         }
 
+        #formSection,
         #studentRecords {
-            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, opacity 0.5s ease;
+            opacity: 0;
+        }
+
+        #formSection.show,
+        #studentRecords.show {
+            max-height: 5000px;
+            opacity: 1;
         }
 
         @media (max-width: 600px) {
             form, table {
                 width: 95%;
+            }
+
+            .section-toggle {
+                flex-direction: column;
+                gap: 20px;
             }
         }
 
@@ -153,49 +208,59 @@
       {% endif %}
     {% endwith %}
 
-    <h1>{{ 'Update Student' if student else 'Add Student' }}</h1>
-
-    <form action="{{ url_for('update', id=student[0]) if student else url_for('add') }}"
-          method="post" enctype="multipart/form-data">
-        <label>Name:</label>
-        <input type="text" name="name" value="{{ student[1] if student else '' }}" required pattern="[A-Za-z ]+">
-
-        <label>Seat No:</label>
-        <input type="text" name="seat_no" value="{{ student[7] if student else '' }}" required>
-
-        <label>Mobile No:</label>
-        <input type="text" name="mobile_no" value="{{ student[3] if student else '' }}" required pattern="\d{10}" maxlength="10">
-
-        <label>Fee Paid:</label>
-        <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}" pattern="\d*">
-
-        <label>Plan Type:</label>
-        <select name="plan_type" required>
-            <option value="800" {% if student and student[4] == '800' %}selected{% endif %}>₹800/month</option>
-            <option value="1000" {% if student and student[4] == '1000' %}selected{% endif %}>₹1000/month</option>
-        </select>
-
-        <label>Start Date:</label>
-        <input type="date" name="start_date" value="{{ student[5] if student else '' }}" required>
-
-        <label>End Date:</label>
-        <input type="date" name="end_date" value="{{ student[6] if student else '' }}" required>
-
-        <label>Aadhaar Photo:</label>
-        <input type="file" name="aadhaar_photo" {% if not student %}required{% endif %} accept="image/*">
-
-        <button type="submit">
-            <i class="fas fa-user-plus"></i> {{ 'Update Student' if student else 'Add Student' }}
-        </button>
-        {% if student %}
-            <a href="{{ url_for('index') }}">Cancel</a>
-        {% endif %}
-    </form>
-
-    <div style="text-align:center; margin:20px;">
-        <button onclick="toggleRecords()" style="padding:10px 20px; background-color:#627180; color:white; border:none; border-radius:5px;">Show Student Records</button>
+    <div class="section-toggle">
+        <div class="action-card" onclick="toggleSection('formSection')">
+            <i class="fas fa-user-plus"></i>
+            <span>Add Student</span>
+        </div>
+        <div class="action-card" onclick="toggleSection('studentRecords')">
+            <i class="fas fa-users"></i>
+            <span>Student Records</span>
+        </div>
     </div>
 
+    <!-- Add/Update Form Section -->
+    <div id="formSection">
+        <h1>{{ 'Update Student' if student else 'Add Student' }}</h1>
+        <form action="{{ url_for('update', id=student[0]) if student else url_for('add') }}"
+              method="post" enctype="multipart/form-data">
+            <label>Name:</label>
+            <input type="text" name="name" value="{{ student[1] if student else '' }}" required pattern="[A-Za-z ]+">
+
+            <label>Seat No:</label>
+            <input type="text" name="seat_no" value="{{ student[7] if student else '' }}" required>
+
+            <label>Mobile No:</label>
+            <input type="text" name="mobile_no" value="{{ student[3] if student else '' }}" required pattern="\d{10}" maxlength="10">
+
+            <label>Fee Paid:</label>
+            <input type="text" name="fee_paid" value="{{ student[2] if student else '' }}" pattern="\d*">
+
+            <label>Plan Type:</label>
+            <select name="plan_type" required>
+                <option value="800" {% if student and student[4] == '800' %}selected{% endif %}>₹800/month</option>
+                <option value="1000" {% if student and student[4] == '1000' %}selected{% endif %}>₹1000/month</option>
+            </select>
+
+            <label>Start Date:</label>
+            <input type="date" name="start_date" value="{{ student[5] if student else '' }}" required>
+
+            <label>End Date:</label>
+            <input type="date" name="end_date" value="{{ student[6] if student else '' }}" required>
+
+            <label>Aadhaar Photo:</label>
+            <input type="file" name="aadhaar_photo" {% if not student %}required{% endif %} accept="image/*">
+
+            <button type="submit">
+                <i class="fas fa-user-plus"></i> {{ 'Update Student' if student else 'Add Student' }}
+            </button>
+            {% if student %}
+                <a href="{{ url_for('index') }}">Cancel</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Student Records Section -->
     <div id="studentRecords">
         <h2>Student Records</h2>
 
@@ -248,9 +313,20 @@
     </div>
 
     <script>
-        function toggleRecords() {
-            let section = document.getElementById('studentRecords');
-            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        let visibleSection = null;
+
+        function toggleSection(sectionId) {
+            const sections = ['formSection', 'studentRecords'];
+            if (visibleSection === sectionId) {
+                document.getElementById(sectionId).classList.remove("show");
+                visibleSection = null;
+            } else {
+                sections.forEach(id => {
+                    document.getElementById(id).classList.remove("show");
+                });
+                document.getElementById(sectionId).classList.add("show");
+                visibleSection = sectionId;
+            }
         }
 
         function filterTable() {
@@ -271,6 +347,13 @@
                 tr[i].style.display = visible ? "" : "none";
             }
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const flashMsg = document.querySelector('.flash-msg');
+            if (flashMsg && flashMsg.innerText.trim() !== '') {
+                document.getElementById('formSection')?.classList.remove('show');
+            }
+        });
     </script>
 </body>
 </html>
