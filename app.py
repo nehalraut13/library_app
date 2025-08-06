@@ -1,16 +1,12 @@
-import os
 from flask import Flask, render_template, request, redirect, send_file, session, flash, url_for
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import sqlite3
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import re
 from datetime import datetime, timedelta
+import os
 from werkzeug.utils import secure_filename
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -20,15 +16,23 @@ UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+def init_db():
+    conn = sqlite3.connect('students.db')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            fee_paid TEXT,
+            mobile_no TEXT,
+            plan_type TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            seat_no TEXT,
+            aadhaar_photo TEXT
+        )
+    ''')
+    conn.close()
 
-
-# ---------- DATABASE CONNECTION ----------
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
-
-# ---------- LOGIN ----------
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if session.get('admin'):
@@ -44,27 +48,20 @@ def login():
             return render_template('dashboard.html', error="Invalid username or password")
     return render_template('dashboard.html')
 
-
 @app.route('/logout')
 def logout():
     session.pop('admin', None)
     return redirect('/')
 
-
-# ---------- DASHBOARD ----------
 @app.route('/dashboard')
 def index():
     if not session.get('admin'):
         return redirect('/')
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM students")
-    records = cur.fetchall()
+    conn = sqlite3.connect('students.db')
+    records = conn.execute('SELECT * FROM students').fetchall()
     conn.close()
     return render_template('index.html', records=records)
 
-
-# ---------- ADD STUDENT ----------
 @app.route('/add', methods=['POST'])
 def add():
     if not session.get('admin'):
@@ -101,12 +98,11 @@ def add():
     except ValueError:
         return "Invalid date format", 400
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('''
+    conn = sqlite3.connect('students.db')
+    conn.execute('''
         INSERT INTO students 
         (name, seat_no, mobile_no, fee_paid, plan_type, start_date, end_date, aadhaar_photo)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', (name, seat_no, mobile_no, fee_paid, plan_type, start_date, end_date, aadhaar_filename))
     conn.commit()
     conn.close()
@@ -114,28 +110,22 @@ def add():
     flash("Student added successfully!")
     return redirect('/dashboard')
 
-
-# ---------- DELETE STUDENT ----------
 @app.route('/delete/<int:id>')
 def delete(id):
     if not session.get('admin'):
         return redirect('/')
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('DELETE FROM students WHERE id = %s', (id,))
+    conn = sqlite3.connect('students.db')
+    conn.execute('DELETE FROM students WHERE id = ?', (id,))
     conn.commit()
     conn.close()
     flash("Student deleted successfully!")
     return redirect('/dashboard')
 
-
-# ---------- UPDATE STUDENT ----------
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
 def update(id):
     if not session.get('admin'):
         return redirect('/')
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = sqlite3.connect('students.db')
     if request.method == 'POST':
         form = request.form
         name = form.get('name')
@@ -146,11 +136,9 @@ def update(id):
         start_date = form.get('start_date')
         end_date = form.get('end_date')
 
-        cur.execute("SELECT * FROM students WHERE id = %s", (id,))
-        student = cur.fetchone()
-
+        student = conn.execute('SELECT * FROM students WHERE id=?', (id,)).fetchone()
         aadhaar_file = request.files.get('aadhaar_photo')
-        aadhaar_filename = student['aadhaar_photo']
+        aadhaar_filename = student[8]
         if aadhaar_file and aadhaar_file.filename != '':
             aadhaar_filename = secure_filename(aadhaar_file.filename)
             aadhaar_file.save(os.path.join(app.config['UPLOAD_FOLDER'], aadhaar_filename))
@@ -171,46 +159,38 @@ def update(id):
         except ValueError:
             return "Invalid date format", 400
 
-        cur.execute('''
+        conn.execute('''
             UPDATE students
-            SET name=%s, seat_no=%s, mobile_no=%s, fee_paid=%s, plan_type=%s, start_date=%s, end_date=%s, aadhaar_photo=%s
-            WHERE id=%s
+            SET name=?, seat_no=?, mobile_no=?, fee_paid=?, plan_type=?, start_date=?, end_date=?, aadhaar_photo=?
+            WHERE id=?
         ''', (name, seat_no, mobile_no, fee_paid, plan_type, start_date, end_date, aadhaar_filename, id))
         conn.commit()
         conn.close()
         flash("Student updated successfully!")
         return redirect('/dashboard')
     else:
-        cur.execute("SELECT * FROM students WHERE id = %s", (id,))
-        student = cur.fetchone()
-        cur.execute("SELECT * FROM students")
-        records = cur.fetchall()
+        student = conn.execute('SELECT * FROM students WHERE id=?', (id,)).fetchone()
+        records = conn.execute('SELECT * FROM students').fetchall()
         conn.close()
         return render_template('index.html', student=student, records=records)
 
-
-# ---------- EXPORT EXCEL ----------
 @app.route('/export/excel')
 def export_excel():
     if not session.get('admin'):
         return redirect('/')
-    conn = get_db_connection()
+    conn = sqlite3.connect('students.db')
     df = pd.read_sql_query("SELECT * FROM students", conn)
     conn.close()
     file_path = 'students_export.xlsx'
     df.to_excel(file_path, index=False)
     return send_file(file_path, as_attachment=True)
 
-
-# ---------- EXPORT PDF ----------
 @app.route('/export/pdf')
 def export_pdf():
     if not session.get('admin'):
         return redirect('/')
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM students")
-    records = cur.fetchall()
+    conn = sqlite3.connect('students.db')
+    records = conn.execute('SELECT * FROM students').fetchall()
     conn.close()
     file_path = 'students_export.pdf'
     c = canvas.Canvas(file_path, pagesize=letter)
@@ -224,8 +204,7 @@ def export_pdf():
         c.drawString(50 + i * 55, y, header)
     y -= 20
     for row in records:
-        reordered = [row['id'], row['name'], row['seat_no'], row['mobile_no'], row['fee_paid'],
-                     row['plan_type'], row['start_date'], row['end_date'], row['aadhaar_photo']]
+        reordered = [row[0], row[1], row[7], row[3], row[2], row[4], row[5], row[6], row[8]]
         for i, value in enumerate(reordered):
             c.drawString(50 + i * 55, y, str(value))
         y -= 15
@@ -235,8 +214,6 @@ def export_pdf():
     c.save()
     return send_file(file_path, as_attachment=True)
 
-
-# ---------- RUN FLASK APP ----------
 if __name__ == '__main__':
-    # Do NOT call init_db here for PostgreSQL on Render
+    init_db()
     app.run(debug=True)
